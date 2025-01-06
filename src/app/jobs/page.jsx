@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useForm } from "react-hook-form";
 import ManageIcon from "../../../public/images/manage.svg";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +26,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import MultipleSelector from "@/components/ui/multiselect";
 import { Badge } from "@/components/ui/badge";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
 const tags = [
   {
@@ -109,6 +121,18 @@ const frameworks = [
 const skills = ["Frontend", "Senior", "HTML", "CSS", "Javascript"];
 
 const Jobs = () => {
+  const form = useForm({
+    defaultValues: {
+      jobTitle: "",
+      department: "",
+      jobType: "",
+      location: "",
+      tags: [],
+    },
+  });
+
+  const onSubmit = (data) => console.log(data);
+
   return (
     <>
       <header className="bg-slate-400 h-40"></header>
@@ -118,85 +142,176 @@ const Jobs = () => {
             <Button variant="outline">Add Job</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Add Job</DialogTitle>
-              <DialogDescription>
-                Make changes to add job here. Click save when you're done.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="job-title" className="text-right">
-                  Job Title
-                </Label>
-                <Input id="job-title" defaultValue="" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="department" className="text-right">
-                  Department
-                </Label>
-                <Input id="department" defaultValue="" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="job-type" className="text-right">
-                  Job Type
-                </Label>
-                <Select id="job-type">
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a Job Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Job Type</SelectLabel>
-                      <SelectItem value="apple">Full Type</SelectItem>
-                      <SelectItem value="banana">Part Time</SelectItem>
-                      <SelectItem value="blueberry">Freelancer</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="job-location" className="text-right">
-                  Location
-                </Label>
-                <Select id="job-location">
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select a Location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Location</SelectLabel>
-                      <SelectItem value="apple">Remote</SelectItem>
-                      <SelectItem value="banana">In Office</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tags" className="text-right">
-                  Tags
-                </Label>
-                <div className="col-span-3">
-                  <MultipleSelector
-                    id="tags"
-                    commandProps={{
-                      label: "Select frameworks",
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)}>
+                <DialogHeader>
+                  <DialogTitle>Add Job</DialogTitle>
+                  <DialogDescription>
+                    Make changes to add job here. Click save when you're done.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <FormField
+                    control={form.control}
+                    name="jobTitle"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: "Job Title is required",
+                      },
                     }}
-                    value={frameworks.slice(0, 2)}
-                    defaultOptions={frameworks}
-                    placeholder="Select Tags"
-                    hideClearAllButton
-                    hidePlaceholderWhenSelected
-                    emptyIndicator={
-                      <p className="text-center text-sm">No results found</p>
-                    }
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-4 items-center gap-x-4">
+                        <FormLabel className="text-right">Job Title</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="shadcn"
+                            className="col-span-3"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="col-span-3 col-start-2" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="department"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: "Department is required",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-4 items-center gap-x-4">
+                        <FormLabel className="text-right">Department</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="shadcn"
+                            className="col-span-3"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="col-span-3 col-start-2" />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="jobType"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: "Job Type is required",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-4 items-center gap-x-4">
+                        <FormLabel className="text-right">Job Type</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="col-span-3">
+                              <SelectValue placeholder="Select a Job Type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Select Job Type</SelectLabel>
+                              <SelectItem value="apple">Full Type</SelectItem>
+                              <SelectItem value="banana">Part Time</SelectItem>
+                              <SelectItem value="blueberry">
+                                Freelancer
+                              </SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="col-span-3 col-start-2" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: "Location is required",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-4 items-center gap-x-4">
+                        <FormLabel className="text-right">Location</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="col-span-3">
+                              <SelectValue placeholder="Select a Job Type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectGroup>
+                              <SelectLabel>Location</SelectLabel>
+                              <SelectItem value="apple">Remote</SelectItem>
+                              <SelectItem value="banana">In Office</SelectItem>
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage className="col-span-3 col-start-2" />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="tags"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: "tags is required",
+                      },
+                    }}
+                    render={({ field }) => (
+                      <FormItem className="grid grid-cols-4 items-center gap-x-4">
+                        <FormLabel className="text-right">Department</FormLabel>
+                        <FormControl>
+                          <div className="col-span-3">
+                            <MultipleSelector
+                              id="tags"
+                              commandProps={{
+                                label: "Select frameworks",
+                              }}
+                              value={field.value}
+                              onChange={field.onChange}
+                              defaultOptions={frameworks}
+                              placeholder="Select Tags"
+                              hideClearAllButton
+                              hidePlaceholderWhenSelected
+                              emptyIndicator={
+                                <p className="text-center text-sm">
+                                  No results found
+                                </p>
+                              }
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage className="col-span-3 col-start-2" />
+                      </FormItem>
+                    )}
                   />
                 </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Save changes</Button>
-            </DialogFooter>
+                <DialogFooter>
+                  <Button type="submit" disabled={!form.formState.isValid}>
+                    Save changes
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
         <div className="border-l-8 border-green-400 flex gap-4 items-center p-10 my-10 shadow-md">
