@@ -35,6 +35,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useEffect, useState } from "react";
+import { add, formatDistanceToNow, isBefore } from "date-fns";
 
 const tags = [
   {
@@ -118,29 +120,97 @@ const frameworks = [
   },
 ];
 
-const skills = ["Frontend", "Senior", "HTML", "CSS", "Javascript"];
+const defaultValues = {
+  jobTitle: "",
+  department: "",
+  jobType: "",
+  location: "",
+  tags: [],
+};
 
 const Jobs = () => {
+  const [open, setOpen] = useState(false);
+  const [jobs, setJobs] = useState([]);
+  const [values, setValues] = useState(defaultValues);
+
   const form = useForm({
-    defaultValues: {
-      jobTitle: "",
-      department: "",
-      jobType: "",
-      location: "",
-      tags: [],
-    },
+    defaultValues: defaultValues,
+    values: values,
   });
 
-  const onSubmit = (data) => console.log(data);
+  const toggleDialog = () => {
+    setOpen((val) => !val);
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      if (data.id) {
+        const res = await fetch(`http://localhost:3000/jobs/${data.id}`, {
+          method: "PUT",
+          body: JSON.stringify({ ...data, created_at: new Date() }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const json = await res.json();
+        setJobs((val) => {
+          const index = val.findIndex((x) => x.id === data.id);
+          return [...val.slice(0, index), json, ...val.slice(index + 1)];
+        });
+      } else {
+        const res = await fetch("http://localhost:3000/jobs", {
+          method: "POST",
+          body: JSON.stringify({ ...data, created_at: new Date() }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        const json = await res.json();
+        setJobs((val) => [...val, json]);
+      }
+
+      toggleDialog();
+    } catch (error) {}
+  };
+
+  const deleteJob = async (id) => {
+    try {
+      await fetch(`http://localhost:3000/jobs/${id}`, {
+        method: "DELETE",
+      });
+      setJobs((val) => {
+        const index = val.findIndex((x) => x.id === id);
+        return [...val.slice(0, index), ...val.slice(index + 1)];
+      });
+    } catch (error) {}
+  };
+
+  const loadJobs = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/jobs");
+      const json = await res.json();
+      setJobs(json);
+    } catch (error) {}
+  };
+
+  useEffect(() => {
+    loadJobs();
+  }, []);
 
   return (
     <>
       <header className="bg-slate-400 h-40"></header>
       <main className="container mx-auto my-10">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline">Add Job</Button>
-          </DialogTrigger>
+        <Dialog open={open} onOpenChange={toggleDialog}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              form.reset(defaultValues);
+              toggleDialog();
+            }}
+          >
+            Add Job
+          </Button>
           <DialogContent className="sm:max-w-[425px]">
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -222,9 +292,13 @@ const Jobs = () => {
                           <SelectContent>
                             <SelectGroup>
                               <SelectLabel>Select Job Type</SelectLabel>
-                              <SelectItem value="apple">Full Type</SelectItem>
-                              <SelectItem value="banana">Part Time</SelectItem>
-                              <SelectItem value="blueberry">
+                              <SelectItem value="Full Type">
+                                Full Type
+                              </SelectItem>
+                              <SelectItem value="Part Time">
+                                Part Time
+                              </SelectItem>
+                              <SelectItem value="Freelancer">
                                 Freelancer
                               </SelectItem>
                             </SelectGroup>
@@ -258,8 +332,10 @@ const Jobs = () => {
                           <SelectContent>
                             <SelectGroup>
                               <SelectLabel>Location</SelectLabel>
-                              <SelectItem value="apple">Remote</SelectItem>
-                              <SelectItem value="banana">In Office</SelectItem>
+                              <SelectItem value="Remote">Remote</SelectItem>
+                              <SelectItem value="In Office">
+                                In Office
+                              </SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>
@@ -314,77 +390,50 @@ const Jobs = () => {
             </Form>
           </DialogContent>
         </Dialog>
-        <div className="border-l-8 border-green-400 flex gap-4 items-center p-10 my-10 shadow-md">
-          <ManageIcon />
-          <div className="flex-1">
-            <div className="flex gap-4">
-              <p>Photosnap</p>
-              <div className="flex gap-4">
-                {tags.map((tag) => (
-                  <Badge key={tag.id}>{tag.text}</Badge>
+        <div>
+          {jobs.map((job) => (
+            <div
+              key={job.id}
+              className="border-l-8 border-green-400 flex gap-4 items-center p-10 my-10 shadow-md"
+            >
+              <ManageIcon />
+              <div className="flex-1">
+                <div className="flex gap-4">
+                  <p>{job.department}</p>
+                  <div className="flex gap-4">
+                    {isBefore(
+                      new Date(),
+                      add(new Date(job.created_at), { minutes: 5 })
+                    ) && <Badge>New</Badge>}
+                  </div>
+                </div>
+                <p>{job.jobTitle}</p>
+                <div className="flex gap-4">
+                  <p>
+                    {formatDistanceToNow(new Date(job.created_at), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                  <p>{job.jobType}</p>
+                  <p>{job.location}</p>
+                </div>
+              </div>
+              <div className="flex-1 flex gap-4 justify-end">
+                {job.tags.map((x) => (
+                  <Badge key={x.value}>{x.label}</Badge>
                 ))}
               </div>
+              <button
+                onClick={() => {
+                  setValues(job);
+                  toggleDialog();
+                }}
+              >
+                Edit
+              </button>
+              <button onClick={() => deleteJob(job.id)}>Delete</button>
             </div>
-            <p>Senior Frontend Developer</p>
-            <div className="flex gap-4">
-              <p>1d ago</p>
-              <p>Part Time</p>
-              <p>Remote</p>
-            </div>
-          </div>
-          <div className="flex-1 flex gap-4 justify-end">
-            {skills.map((x) => (
-              <Badge key={x}>{x}</Badge>
-            ))}
-          </div>
-        </div>
-        <div className="border-l-8 border-green-400 flex gap-4 items-center p-10 my-10 shadow-md">
-          <ManageIcon />
-          <div className="flex-1">
-            <div className="flex gap-4">
-              <p>Photosnap</p>
-              <div className="flex gap-4">
-                {tags.map((tag) => (
-                  <Badge key={tag.id}>{tag.text}</Badge>
-                ))}
-              </div>
-            </div>
-            <p>Senior Frontend Developer</p>
-            <div className="flex gap-4">
-              <p>1d ago</p>
-              <p>Part Time</p>
-              <p>Remote</p>
-            </div>
-          </div>
-          <div className="flex-1 flex gap-4 justify-end">
-            {skills.map((x) => (
-              <Badge key={x}>{x}</Badge>
-            ))}
-          </div>
-        </div>
-        <div className="border-l-8 border-green-400 flex gap-4 items-center p-10 my-10 shadow-md">
-          <ManageIcon />
-          <div className="flex-1">
-            <div className="flex gap-4">
-              <p>Photosnap</p>
-              <div className="flex gap-4">
-                {tags.map((tag) => (
-                  <Badge key={tag.id}>{tag.text}</Badge>
-                ))}
-              </div>
-            </div>
-            <p>Senior Frontend Developer</p>
-            <div className="flex gap-4">
-              <p>1d ago</p>
-              <p>Part Time</p>
-              <p>Remote</p>
-            </div>
-          </div>
-          <div className="flex-1 flex gap-4 justify-end">
-            {skills.map((x) => (
-              <Badge key={x}>{x}</Badge>
-            ))}
-          </div>
+          ))}
         </div>
       </main>
     </>
